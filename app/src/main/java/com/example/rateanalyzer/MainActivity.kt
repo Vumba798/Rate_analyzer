@@ -116,11 +116,14 @@ class MyViewModel(application: Application) : AndroidViewModel(application) {
     @RequiresApi(Build.VERSION_CODES.O)
     private suspend fun updateAnalyze() {
         viewModelScope.launch {
-            val tmpResult = analyzer.getAnalyzeResult()
-            if (tmpResult != null) {
-                result.value = tmpResult!!
-                analyzer.saveToFile(file.outputStream())
-                json.value = analyzer.getJson()
+            try {
+                val tmp = analyzer.getAnalyzeResult()
+                if (tmp != null) {
+                    json.value = analyzer.getJson()
+                    result.value = tmp
+                }
+            } catch(exception: UnknownHostException) {
+                println("An error has occurred:  ${exception.message}")
             }
         }
     }
