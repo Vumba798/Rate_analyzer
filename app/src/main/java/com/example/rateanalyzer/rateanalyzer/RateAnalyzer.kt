@@ -12,6 +12,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
+import java.net.UnknownHostException
 import java.time.LocalDate
 import java.time.ZoneId
 
@@ -35,7 +36,7 @@ data class AnalyzeResult(
     val rates: List<Rate>
 )
 
-suspend fun readFromFileAnalyzes(path: String): AnalyzeResult = coroutineScope {
+suspend fun readFromFileAnalyzes(path: String): AnalyzeResult? = coroutineScope {
     withContext(Dispatchers.IO) {
         val gson = GsonBuilder().setPrettyPrinting().create()
         val jsonString = File(path).bufferedReader().use {
@@ -57,39 +58,51 @@ class RateAnalyzer {
     private fun getDateMonthAgo() = LocalDate.now(ZoneId.systemDefault()).minusMonths(1)
 
     @RequiresApi(Build.VERSION_CODES.O)
-    suspend fun getAnalyzeResult(): AnalyzeResult = coroutineScope {
+    suspend fun getAnalyzeResult(): AnalyzeResult? = coroutineScope {
         rates = mutableListOf()
-        val deferredLatest: Deferred<JsonObject> = async(Dispatchers.IO) {
-            val url = URL("https://openexchangerates.org/api/latest.json?app_id=d1290d44145b4d62b6760da7db9446e8")
-            val apiLatestString = with(url.openConnection() as HttpURLConnection) {
-                requestMethod = "GET"
-                inputStream.bufferedReader().use {
-                    it.readText()
+        try {
+            val deferredLatest: Deferred<JsonObject> = async(Dispatchers.IO) {
+                val url =
+                    URL("https://openexchangerates.org/api/latest.json?app_id=d1290d44145b4d62b6760da7db9446e8")
+                val apiLatestString = with(url.openConnection() as HttpURLConnection) {
+                    requestMethod = "GET"
+                    inputStream.bufferedReader().use {
+                        it.readText()
+                    }
                 }
+                JsonParser.parseString(apiLatestString).asJsonObject["rates"].asJsonObject
             }
-            JsonParser.parseString(apiLatestString).asJsonObject["rates"].asJsonObject
-        }
-        val deferredMonthAgo: Deferred<JsonObject> = async(Dispatchers.IO) {
-            val dateMonthAgo = getDateMonthAgo().toString()
-            val url =
-                URL("https://openexchangerates.org/api/historical/$dateMonthAgo.json?app_id=d1290d44145b4d62b6760da7db9446e8")
-            val apiHistoricalString = with(url.openConnection() as HttpURLConnection) {
-                requestMethod = "GET"
-                inputStream.bufferedReader().use {
-                    it.readText()
+            val deferredMonthAgo: Deferred<JsonObject> = async(Dispatchers.IO) {
+                val dateMonthAgo = getDateMonthAgo().toString()
+                val url =
+                    URL("https://openexchangerates.org/api/historical/$dateMonthAgo.json?app_id=d1290d44145b4d62b6760da7db9446e8")
+                val apiHistoricalString = with(url.openConnection() as HttpURLConnection) {
+                    requestMethod = "GET"
+                    inputStream.bufferedReader().use {
+                        it.readText()
+                    }
                 }
+                JsonParser.parseString(apiHistoricalString).asJsonObject["rates"].asJsonObject
             }
-            JsonParser.parseString(apiHistoricalString).asJsonObject["rates"].asJsonObject
-        }
-        val latestRates = deferredLatest.await()
-        val charCodes = latestRates.keySet()
+            val latestRates = deferredLatest.await()
+            val charCodes = latestRates.keySet()
 
-        val monthAgoRates = deferredMonthAgo.await()
-        for (charCode in charCodes) {
-            rates.add(Rate(charCode, monthAgoRates[charCode].asFloat, latestRates[charCode].asFloat))
+            val monthAgoRates = deferredMonthAgo.await()
+            for (charCode in charCodes) {
+                rates.add(
+                    Rate(
+                        charCode,
+                        monthAgoRates[charCode].asFloat,
+                        latestRates[charCode].asFloat
+                    )
+                )
+            }
+            updateVars()
+            AnalyzeResult(min, max, avg, growing, rates)
+        } catch (exception: UnknownHostException) {
+            println("An error has occurred: ${exception.message}")
+            null
         }
-        updateVars()
-        AnalyzeResult(min, max, avg, growing, rates)
     }
 
     private fun updateVars() {
