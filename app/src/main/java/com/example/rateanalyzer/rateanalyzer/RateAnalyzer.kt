@@ -54,10 +54,8 @@ class RateAnalyzer {
     private var avg: Float = 0F
     private var jsonString = ""
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun getDateMonthAgo() = LocalDate.now(ZoneId.systemDefault()).minusMonths(1)
 
-    @RequiresApi(Build.VERSION_CODES.O)
     suspend fun getAnalyzeResult(): AnalyzeResult? = coroutineScope {
         rates = mutableListOf()
         try {
