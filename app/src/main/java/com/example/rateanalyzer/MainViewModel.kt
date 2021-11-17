@@ -1,6 +1,5 @@
 package com.example.rateanalyzer
 
-import android.annotation.SuppressLint
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
@@ -34,7 +33,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun onStart() {
-
         viewModelScope.launch {
             if (file.isFile) {
                 // if file is already initialized
