@@ -20,7 +20,7 @@ import java.lang.Exception
 
 class MainActivity : AppCompatActivity() {
     private val scope = MainScope()
-
+    private val myViewModel: MainViewModel by viewModels()
     private val analyzer = RateAnalyzer()
 
     @SuppressLint("SetTextI18n")
@@ -29,7 +29,6 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val button = findViewById<Button>(R.id.button)
-        val myViewModel: MainViewModel by viewModels()
         val recyclerView = findViewById<RecyclerView>(R.id.listOfGrowing)
         recyclerView.layoutManager = LinearLayoutManager(this)
 
@@ -50,15 +49,7 @@ class MainActivity : AppCompatActivity() {
     private fun initButtonClicker(button: Button, myViewModel: MainViewModel) {
         button.setOnClickListener {
             Toast.makeText(applicationContext, "Updating rates...", Toast.LENGTH_SHORT).show()
-            try {
-                myViewModel.updateRates()
-            } catch (exception: Exception) {
-                Toast.makeText(
-                    applicationContext,
-                    "An error has occurred: ${exception.message}",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
+            myViewModel.updateRates()
         }
     }
 }
