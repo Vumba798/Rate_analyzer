@@ -65,10 +65,10 @@ class AuthActivity : AppCompatActivity() {
 @Composable
 fun LoginScreen(model: MainViewModel = viewModel()) {
     RateAnalyzerTheme {
-        val login: String by model.login.observeAsState("")
+        var login: String by remember { mutableStateOf("")}
         LoginContent(
             login = login,
-            onLoginChange = { model.onLoginChange(it) }
+            onLoginChange = { login = it }
         )
     }
 }
@@ -91,11 +91,12 @@ fun LoginContent(login: String, onLoginChange: (String) -> Unit) {
             modifier = Modifier
                 .background(Color.DarkGray)
         ) {
-            initLoginTextField(login, onLoginChange, focusManager)
-            initPasswordTextField(login, password, { password = it }, focusManager)
+            InitLoginTextField(login, onLoginChange, focusManager)
+            InitPasswordTextField(login, password, { password = it }, focusManager)
         }
         val context = LocalContext.current
         val intent = Intent(context, MainActivity::class.java)
+        intent.putExtra("login", login)
         Button(
             modifier = Modifier
                 .size(200.dp, 50.dp),
@@ -110,7 +111,7 @@ fun LoginContent(login: String, onLoginChange: (String) -> Unit) {
 }
 
 @Composable
-fun initLoginTextField(login: String, onLoginChange: (String) -> Unit, focusManager: FocusManager) {
+fun InitLoginTextField(login: String, onLoginChange: (String) -> Unit, focusManager: FocusManager) {
     TextField(
         value = login,
         placeholder = { Text("Login") },
@@ -125,7 +126,7 @@ fun initLoginTextField(login: String, onLoginChange: (String) -> Unit, focusMana
 }
 
 @Composable
-fun initPasswordTextField(
+fun InitPasswordTextField(
     login: String,
     password: String,
     onPasswordChange: (String) -> Unit,
@@ -133,6 +134,7 @@ fun initPasswordTextField(
 ) {
     var passwordVisibility: Boolean by remember { mutableStateOf(false) }
     val intent = Intent(LocalContext.current, MainActivity::class.java)
+    intent.putExtra("login", login)
     val context = LocalContext.current
     TextField(
         value = password,

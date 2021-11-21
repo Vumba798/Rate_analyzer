@@ -15,8 +15,6 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
-    private val _login = MutableLiveData<String>("")
-    val login: LiveData<String> = _login
     private val analyzer = RateAnalyzer()
     private val path =
         getApplication<Application>().applicationContext.getFilesDir().toString() + "/saved.json"
@@ -26,10 +24,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         onStart()
-    }
-
-    fun onLoginChange(newLogin: String) {
-        _login.value = newLogin
     }
 
     fun updateRates() {

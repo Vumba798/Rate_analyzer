@@ -19,7 +19,6 @@ import org.w3c.dom.Text
 import java.lang.Exception
 
 class MainActivity : AppCompatActivity() {
-    private val scope = MainScope()
     private val myViewModel: MainViewModel by viewModels()
     private val analyzer = RateAnalyzer()
 
@@ -27,6 +26,17 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        if (savedInstanceState == null) {
+            val BundleExtras = intent.extras
+            if (BundleExtras != null) {
+                Toast.makeText(
+                    applicationContext,
+                    "Loggined as ${BundleExtras["login"].toString()}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
 
         val button = findViewById<Button>(R.id.button)
         val recyclerView = findViewById<RecyclerView>(R.id.listOfGrowing)
@@ -43,10 +53,6 @@ class MainActivity : AppCompatActivity() {
             avgTextView.text = "Avg: " + it.avg.toString()
         })
 
-        initButtonClicker(button, myViewModel)
-    }
-
-    private fun initButtonClicker(button: Button, myViewModel: MainViewModel) {
         button.setOnClickListener {
             Toast.makeText(applicationContext, "Updating rates...", Toast.LENGTH_SHORT).show()
             myViewModel.updateRates()
